@@ -1,0 +1,17 @@
+/vendor
+/node_modules
+.env
+.env.*
+/storage/*.key
+/storage/logs
+/public/storage
+.DS_Store
+.idea
+.vscode
+*.sublime-project
+*.sublime-workspace
+npm-debug.log
+yarn-error.log
+composer.lock
+package-lock.json
+docker-compose.override.yml

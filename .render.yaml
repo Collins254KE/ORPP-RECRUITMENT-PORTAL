@@ -1,0 +1,51 @@
+services:
+  - type: web
+    name: orpp4-laravel
+    env: docker
+    plan: free
+    region: oregon
+    branch: main
+    dockerfilePath: ./Dockerfile
+    buildCommand: ""
+    startCommand: |
+      php artisan migrate --force && \
+      php artisan config:cache && \
+      php artisan route:cache && \
+      apache2-foreground
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        value: https://orpp-e-recruitment-portal.onrender.com
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        fromDatabase:
+          name: orpp4-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: orpp4-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: orpp4-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: orpp4-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: orpp4-db
+          property: password
+
+databases:
+  - name: orpp4-db
+    databaseName: orpp4
+    user: orppuser
+    plan: free
