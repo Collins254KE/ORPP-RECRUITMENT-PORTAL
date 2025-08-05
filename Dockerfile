@@ -29,6 +29,14 @@ WORKDIR /var/www/html
 
 # Copy application source
 COPY . .
+# Ensure Laravel cache and storage directories exist and are writable
+RUN mkdir -p storage/framework/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    bootstrap/cache \
+ && chmod -R 775 storage bootstrap/cache \
+ && chown -R www-data:www-data storage bootstrap/cache
+
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
