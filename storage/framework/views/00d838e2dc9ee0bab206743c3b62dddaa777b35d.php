@@ -300,10 +300,29 @@
                                                         ?>
 
                                                         <?php if($requirements['eligible']): ?>
-                                                            <a href="<?php echo e(route('applications.apply', $job->id)); ?>"
-                                                                class="btn btn-primary btn-sm">
-                                                                <i class="fas fa-paper-plane me-1"></i>Apply Now
-                                                            </a>
+<?php
+    $isExpired = $job->deadline && \Carbon\Carbon::parse($job->deadline)->isPast();
+?>
+
+<?php if($isExpired): ?>
+    <div class="alert alert-danger mb-2">
+        <i class="fas fa-exclamation-circle me-1"></i>
+        This job is no longer open for application.
+    </div>
+
+    <a href="javascript:void(0);"
+       class="btn btn-danger btn-sm"
+       onclick="alert('Application closed for this job.')">
+        <i class="fas fa-times-circle me-1"></i> Apply Now
+    </a>
+<?php else: ?>
+    <a href="<?php echo e(route('applications.apply', $job->id)); ?>"
+       class="btn btn-primary btn-sm">
+        <i class="fas fa-paper-plane me-1"></i> Apply Now
+    </a>
+<?php endif; ?>
+
+
                                                         <?php else: ?>
                                                             <div class="text-center text-muted small">
                                                                 <i class="fas fa-ban text-danger mb-1"

@@ -213,10 +213,15 @@
                             <tbody>
                                 <?php $__currentLoopData = $recentApplications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $application): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <tr>
-                                        <td>
-                                            <strong><?php echo e($application->user->name); ?></strong>
-                                            <br><small class="text-muted"><?php echo e($application->user->email); ?></small>
-                                        </td>
+                                       <td>
+    <?php if($application->user): ?>
+        <strong><?php echo e($application->user->name); ?></strong>
+        <br><small class="text-muted"><?php echo e($application->user->email); ?></small>
+    <?php else: ?>
+        <strong class="text-danger">[User not found]</strong>
+    <?php endif; ?>
+</td>
+
                                         <td>
                                             <small><?php echo e(Str::limit($application->jobListing->title ?? 'N/A', 20)); ?></small>
                                         </td>

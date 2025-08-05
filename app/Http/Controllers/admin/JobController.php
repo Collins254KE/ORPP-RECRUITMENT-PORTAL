@@ -63,6 +63,8 @@ class JobController extends Controller
         ]);
 
         $validatedData['created_by'] = Auth::id();
+        $year = now()->year;
+
         $validatedData['code'] = 'JOB-' . strtoupper(uniqid());
 
         JobListing::create($validatedData);

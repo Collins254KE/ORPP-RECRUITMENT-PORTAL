@@ -213,10 +213,15 @@
                             <tbody>
                                 @foreach ($recentApplications as $application)
                                     <tr>
-                                        <td>
-                                            <strong>{{ $application->user->name }}</strong>
-                                            <br><small class="text-muted">{{ $application->user->email }}</small>
-                                        </td>
+                                       <td>
+    @if ($application->user)
+        <strong>{{ $application->user->name }}</strong>
+        <br><small class="text-muted">{{ $application->user->email }}</small>
+    @else
+        <strong class="text-danger">[User not found]</strong>
+    @endif
+</td>
+
                                         <td>
                                             <small>{{ Str::limit($application->jobListing->title ?? 'N/A', 20) }}</small>
                                         </td>

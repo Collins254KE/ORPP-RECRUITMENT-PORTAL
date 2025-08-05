@@ -14,6 +14,7 @@ use App\Models\{JobListing, User};
 use Carbon\Carbon;
 use ZipArchive;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Mail\ShortlistedNotification;
 
 class ApplicationsController extends Controller
 {
@@ -114,6 +115,40 @@ $filtered = $applications->filter(function ($application) use (
         return view('admin.applications.index', ['applications' => $paginatedResults]);
     }
 
+
+public function sendShortlistEmails(Request $request)
+{
+    $applications = collect();
+
+    // If specific application IDs are provided
+    if ($request->has('application_ids') && is_array($request->application_ids)) {
+        $request->validate([
+            'application_ids' => 'required|array',
+            'application_ids.*' => 'exists:applications,id',
+        ]);
+
+        $applications = Application::whereIn('id', $request->application_ids)
+            ->with(['user', 'jobListing'])
+            ->get();
+    } else {
+        // If no specific IDs, send to all with status = shortlisted
+        $applications = Application::with(['user', 'jobListing'])
+            ->where('status', 'shortlisted')
+            ->get();
+    }
+
+    $sent = 0;
+
+    foreach ($applications as $application) {
+        if ($application->user && $application->user->email) {
+            Mail::to($application->user->email)->queue(new \App\Mail\ShortlistedNotification($application));
+            $sent++;
+        }
+    }
+
+    return back()->with('success', "$sent shortlisted email(s) sent successfully.");
+}
+
     /**
      * Show job listings and user's applications.
      */
@@ -128,52 +163,66 @@ $filtered = $applications->filter(function ($application) use (
     /**
      * Apply for a job.
      */
-    public function apply($id)
-    {
-        $user = Auth::user();
-        $user->load([
-            'academicRecords',
-            'professionalQualifications',
-            'professionalMemberships',
-            'employmentHistory',
-            'referees'
-        ]);
+   public function apply($id)
+{
+    $user = Auth::user();
+    $user->load([
+        'academicRecords',
+        'professionalQualifications',
+        'professionalMemberships',
+        'employmentHistory',
+        'referees'
+    ]);
 
-        $requiredBiodataFields = ['name', 'dob', 'phone', 'email', 'county', 'sub_county'];
-        foreach ($requiredBiodataFields as $field) {
-            if (empty($user->$field)) {
-                return redirect()->back()->with('error', "Please complete your profile: missing {$field}.");
-            }
-        }
+    //  Load the job
+    $job = JobListing::findOrFail($id);
 
-        if (
-            $user->academicRecords->isEmpty() ||
-            $user->professionalQualifications->isEmpty() ||
-            $user->professionalMemberships->isEmpty() ||
-            $user->employmentHistory->isEmpty() ||
-            $user->referees->isEmpty()
-        ) {
-            return redirect()->back()->with('error', 'Please complete all sections of your profile before applying.');
-        }
-
-        if (!$user->isProfileComplete()) {
-            return redirect()->back()->with('error', 'Please complete your profile before applying.');
-        }
-
-        if (Application::where('user_id', $user->id)->where('job_listing_id', $id)->exists()) {
-            return redirect()->back()->with('error', 'You have already applied for this job.');
-        }
-
-        $application = Application::create([
-            'job_listing_id' => $id,
-            'user_id'        => $user->id,
-            'status'         => 'Processing',
-        ]);
-
-        Mail::to($user->email)->queue(new ApplicationSubmitted($user, $application));
-
-        return redirect()->route('user.applications')->with('success', 'Application submitted successfully.');
+    //  Check if job is expired
+    if ($job->deadline && \Carbon\Carbon::parse($job->deadline)->isPast()) {
+        return redirect()->back()->with('error', 'This job has expired. You can no longer apply.');
     }
+
+    //  Check for missing biodata
+    $requiredBiodataFields = ['name', 'dob', 'phone', 'email', 'county', 'sub_county'];
+    foreach ($requiredBiodataFields as $field) {
+        if (empty($user->$field)) {
+            return redirect()->back()->with('error', "Please complete your profile: missing {$field}.");
+        }
+    }
+
+    //  Check for empty sections
+    if (
+        $user->academicRecords->isEmpty() ||
+        $user->professionalQualifications->isEmpty() ||
+        $user->professionalMemberships->isEmpty() ||
+        $user->employmentHistory->isEmpty() ||
+        $user->referees->isEmpty()
+    ) {
+        return redirect()->back()->with('error', 'Please complete all sections of your profile before applying.');
+    }
+
+    //  Check profile completeness
+    if (!$user->isProfileComplete()) {
+        return redirect()->back()->with('error', 'Please complete your profile before applying.');
+    }
+
+    //  Check if already applied
+    if (Application::where('user_id', $user->id)->where('job_listing_id', $id)->exists()) {
+        return redirect()->back()->with('error', 'You have already applied for this job.');
+    }
+
+    //  Create application
+    $application = Application::create([
+        'job_listing_id' => $id,
+        'user_id'        => $user->id,
+        'status'         => 'Processing',
+    ]);
+
+    //  Send confirmation email
+    Mail::to($user->email)->queue(new ApplicationSubmitted($user, $application));
+
+    return redirect()->route('user.applications')->with('success', 'Application submitted successfully.');
+}
 
     /**
      * Admin: View an application in detail.
@@ -196,15 +245,34 @@ $filtered = $applications->filter(function ($application) use (
     /**
      * Admin: Update application status.
      */
-    public function update(Request $request, $id)
-    {
-        $request->validate(['status' => 'required|string']);
+ public function update(Request $request, $id)
+{
+    $request->validate(['status' => 'required|string']);
 
-        $application = Application::findOrFail($id);
-        $application->update(['status' => $request->input('status')]);
+    $application = Application::with('user', 'jobListing')->findOrFail($id);
+    $oldStatus = $application->status;
+    $newStatus = $request->input('status');
 
-        return redirect()->back()->with('success', 'Application status updated.');
+    $application->update(['status' => $newStatus]);
+
+    if (
+        strtolower($newStatus) === 'shortlisted' &&
+        strtolower($oldStatus) !== 'shortlisted' &&
+        $application->user &&
+        $application->user->email
+    ) {
+        Log::info('Sending shortlisted email to: ' . $application->user->email);
+
+        try {
+            Mail::to($application->user->email)->send(new ShortlistedNotification($application));
+            Log::info('Shortlisted email successfully sent.');
+        } catch (\Exception $e) {
+            Log::error('Failed to send shortlisted email: ' . $e->getMessage());
+        }
     }
+
+    return redirect()->back()->with('success', 'Application status updated.');
+}
 
     /**
      * Show a user's application detail.
@@ -266,69 +334,55 @@ $filtered = $applications->filter(function ($application) use (
         return back()->with('success', 'Document uploaded successfully.');
     }
 
+
+   
+
     /**
      * Export applicants for a job to CSV.
      */
     public function exportApplicants($job_id)
-    {
-        $applications = Application::where('job_listing_id', $job_id)
-            ->with([
-                'user',
-                'user.academicRecords',
-                'user.professionalQualifications',
-                'user.professionalMemberships',
-                'user.employmentHistory',
-                'user.referees',
-            ])->get();
+{
+    $applications = Application::where('job_listing_id', $job_id)
+        ->with(['user']) // Removed the unnecessary related data
+        ->get();
 
-        $fileName = 'applicants_job_' . $job_id . '_' . now()->format('Ymd_His') . '.csv';
+    $fileName = 'applicants_job_' . $job_id . '_' . now()->format('Ymd_His') . '.csv';
 
-        $headers = [
-            'Content-Type'        => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"$fileName\"",
-        ];
+    $headers = [
+        'Content-Type'        => 'text/csv',
+        'Content-Disposition' => "attachment; filename=\"$fileName\"",
+    ];
 
-        $columns = [
-            'Name', 'Email', 'Phone', 'County', 'Sub County', 'Ethnicity', 'DOB', 'Gender',
-            'Nationality', 'ID/Passport', 'KRA Pin',
-            'Academic Records', 'Professional Qualifications', 'Professional Memberships',
-            'Work History', 'Referees', 'Profile Completeness'
-        ];
+    $columns = [
+        'Name', 'Email', 'Phone', 'County', 'Sub County', 'Ethnicity', 'DOB', 'Gender',
+        'Nationality', 'ID/Passport', 'KRA Pin', 'Profile Completeness'
+    ];
 
-        $callback = function () use ($applications, $columns) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $columns);
+    $callback = function () use ($applications, $columns) {
+        $file = fopen('php://output', 'w');
+        fputcsv($file, $columns);
 
-            foreach ($applications as $app) {
-                $user = $app->user;
-                if (!$user) continue;
+        foreach ($applications as $app) {
+            $user = $app->user;
+            if (!$user) continue;
 
-                $academicRecords = $user->academicRecords->map(fn($r) => "{$r->qualification} ({$r->institution}, {$r->year_completed})")->implode('; ');
-                $profQualifications = $user->professionalQualifications->map(fn($q) => "{$q->qualification} ({$q->institution}, {$q->year_completed})")->implode('; ');
-                $profMemberships = $user->professionalMemberships->map(fn($m) => "{$m->organization} ({$m->membership_number})")->implode('; ');
-                $workHistory = $user->employmentHistory->map(function ($job) {
-                    $start = $job->start_date ? Carbon::parse($job->start_date)->format('Y-m') : 'N/A';
-                    $end = $job->end_date ? Carbon::parse($job->end_date)->format('Y-m') : 'Present';
-                    return "{$job->position} at {$job->company} ({$start} - {$end})";
-                })->implode('; ');
-                $referees = $user->referees->map(fn($r) => trim("{$r->first_name} {$r->middle_name} {$r->other_name}") . " ({$r->referee_type}, {$r->email})")->implode('; ');
-                $completeness = method_exists($user, 'profileCompleteness') ? $user->profileCompleteness() . '%' : 'N/A';
+            $completeness = method_exists($user, 'profileCompleteness') ? $user->profileCompleteness() . '%' : 'N/A';
 
-                fputcsv($file, [
-                    $user->name ?? '', $user->email ?? '', $user->phone ?? '',
-                    $user->county ?? '', $user->sub_county ?? '', $user->ethnicity ?? '',
-                    $user->dob ? Carbon::parse($user->dob)->format('Y-m-d') : '', $user->gender ?? '',
-                    $user->nationality ?? '', $user->id_passport ?? '', $user->kra_pin ?? '',
-                    $academicRecords, $profQualifications, $profMemberships,
-                    $workHistory, $referees, $completeness
-                ]);
-            }
+            fputcsv($file, [
+                $user->name ?? '', $user->email ?? '', $user->phone ?? '',
+                $user->county ?? '', $user->sub_county ?? '', $user->ethnicity ?? '',
+                $user->dob ? \Carbon\Carbon::parse($user->dob)->format('Y-m-d') : '', $user->gender ?? '',
+                $user->nationality ?? '', $user->id_passport ?? '', $user->kra_pin ?? '',
+                $completeness
+            ]);
+        }
 
-            fclose($file);
-        };
+        fclose($file);
+    };
 
-        return response()->stream($callback, 200, $headers);
-    }
+    return response()->stream($callback, 200, $headers);
+}
+
 public function report()
 {
     // Example Data
