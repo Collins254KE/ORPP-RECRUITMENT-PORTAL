@@ -1,14 +1,18 @@
-#!/bin/sh
+#!/bin/bash
 
+# Exit if any command fails
 set -e
 
-# Generate app key if missing
-if [ ! -f storage/oauth-private.key ]; then
-  echo "Running Laravel setup..."
-  php artisan key:generate --force
-  php artisan config:cache
-  php artisan route:cache
-  php artisan view:cache
-fi
+# Set permissions (optional on render)
+chmod -R 775 storage bootstrap/cache
 
+# Laravel optimization commands
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# Run migrations (optional: enable in production if needed)
+# php artisan migrate --force
+
+# Start PHP-FPM
 exec php-fpm
