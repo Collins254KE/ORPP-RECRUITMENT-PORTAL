@@ -15,4 +15,5 @@ php artisan view:cache
 # php artisan migrate --force
 
 # Start PHP-FPM
-exec php-fpm
+php artisan serve --host=0.0.0.0 --port=10000
+
