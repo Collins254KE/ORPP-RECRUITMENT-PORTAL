@@ -16,8 +16,7 @@ RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     libpq-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_mysql zip gd
-
+    && docker-php-ext-install pdo pdo_pgsql zip gd
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
