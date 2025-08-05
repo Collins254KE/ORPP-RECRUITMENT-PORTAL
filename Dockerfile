@@ -39,7 +39,6 @@ RUN chown -R www-data:www-data /var/www \
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
 # Copy default .env file (optional – comment out if deploying securely)
-COPY .env.example .env
 
 # Entrypoint
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
