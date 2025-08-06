@@ -42,6 +42,7 @@ class ApplicantsSeeder extends Seeder
             //     'password' => Hash::make('password123'),
             //     'email_verified_at' => now(),
             // ],
+            
             [
                 'name' => 'James Odhiambo Ochieng',
                 'title' => 'Mr',

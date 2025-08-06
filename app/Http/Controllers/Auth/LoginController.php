@@ -34,7 +34,7 @@ class LoginController extends Controller
     protected function credentials(Request $request)
     {
         $login = $request->input('login');
-        $password = $request->input('psw');
+        $password = $request->input('password');
 
         // Determine if input is email or ID/passport
         $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'id_or_passport';
@@ -71,4 +71,4 @@ class LoginController extends Controller
         // Regular users
         return redirect()->intended('/home');
     }
-} // <--- this was missing!
+} 

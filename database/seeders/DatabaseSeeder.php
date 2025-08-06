@@ -17,13 +17,19 @@ class DatabaseSeeder extends Seeder
     {
         // Clean users table in local environment only
         if (app()->environment('local')) {
-            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-            DB::table('users')->truncate();
-            DB::table('job_listings')->truncate();
-            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            if (DB::getDriverName() === 'mysql') {
+                DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+                DB::table('users')->truncate();
+                DB::table('job_listings')->truncate();
+                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            } else {
+                // For PostgreSQL, use cascade to truncate
+                DB::statement('TRUNCATE TABLE users CASCADE;');
+                DB::statement('TRUNCATE TABLE job_listings CASCADE;');
+            }
         }
 
-        // Create default ORPP Admin User and send email verification event
+        // Create default ORPP Admin User
         $admin = User::firstOrCreate(
             ['email' => 'collinskiprotich2018@gmail.com'],
             [
@@ -47,7 +53,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-       // event(new Registered($admin));
+        // event(new Registered($admin));
 
         // Create sample applicant users
         User::firstOrCreate(
@@ -96,7 +102,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Seed job listings
+        // Seed job listings and applicants
         $this->call([
             JobListingsTableSeeder::class,
             ApplicantsSeeder::class,

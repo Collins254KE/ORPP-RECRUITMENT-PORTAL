@@ -28,6 +28,11 @@ class Handler extends ExceptionHandler
         'password',
         'password_confirmation',
     ];
+public function render($request, Throwable $exception)
+{
+    dd($exception); // This will print the full exception on screen
+    return parent::render($request, $exception);
+}
 
     /**
      * Register the exception handling callbacks for the application.
