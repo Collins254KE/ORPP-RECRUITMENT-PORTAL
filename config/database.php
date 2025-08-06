@@ -63,7 +63,9 @@ return [
             ]) : [],
         ],
 
-       'pgsql' => [
+    
+
+'pgsql' => [
     'driver' => 'pgsql',
     'url' => env('DATABASE_URL'),
     'host' => env('DB_HOST', '127.0.0.1'),
@@ -76,10 +78,10 @@ return [
     'prefix_indexes' => true,
     'search_path' => 'public',
     'sslmode' => 'require', // Force SSL
-   'options' => extension_loaded('pdo_pgsql') && defined('PDO::PGSQL_ATTR_SSL_MODE') ? [
-    PDO::PGSQL_ATTR_SSL_MODE => 'require',
-] : [],
-
+    'options' => extension_loaded('pdo_pgsql') && defined('PDO::PGSQL_ATTR_SSL_MODE') ? [
+        PDO::PGSQL_ATTR_SSL_MODE => 'require'
+    ] : [],
+], // ← this closing bracket was missing
 
 
         'sqlsrv' => [
