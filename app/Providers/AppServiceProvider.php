@@ -7,6 +7,7 @@ use Illuminate\Auth\Passwords\TokenRepositoryInterface;
 use App\Auth\CustomTokenRepository;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -34,6 +35,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
     }
 }

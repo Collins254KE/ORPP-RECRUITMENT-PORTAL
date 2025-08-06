@@ -377,3 +377,7 @@ Auth::routes(['verify' => true]);
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified']);
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::post('/admin/applications/send-shortlist-emails', [ApplicationsController::class, 'sendShortlistEmails'])->name('admin.applications.sendShortlistEmails');
+
+Route::get('/forgot-password', function () {
+    return view('auth.custom-forgot-password-form');
+})->name('password.request');
