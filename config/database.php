@@ -76,10 +76,10 @@ return [
     'prefix_indexes' => true,
     'search_path' => 'public',
     'sslmode' => 'require', // Force SSL
-    'options' => extension_loaded('pdo_pgsql') ? [
-        PDO::PGSQL_ATTR_SSL_MODE => 'require',
-    ] : [],
-],
+   'options' => extension_loaded('pdo_pgsql') && defined('PDO::PGSQL_ATTR_SSL_MODE') ? [
+    PDO::PGSQL_ATTR_SSL_MODE => 'require',
+] : [],
+
 
 
         'sqlsrv' => [
