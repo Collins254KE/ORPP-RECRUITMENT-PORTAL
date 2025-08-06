@@ -22,30 +22,14 @@ services:
       - key: APP_URL
         value: https://orpp-e-recruitment-portal.onrender.com
       - key: DB_CONNECTION
-        value: mysql
+        value: pgsql
       - key: DB_HOST
-        fromDatabase:
-          name: orpp4-db
-          property: host
+        value: dpg-d29f617diees73cm4he0-a
       - key: DB_PORT
-        fromDatabase:
-          name: orpp4-db
-          property: port
+        value: 5432
       - key: DB_DATABASE
-        fromDatabase:
-          name: orpp4-db
-          property: database
+        value: orpp_pgsql_db
       - key: DB_USERNAME
-        fromDatabase:
-          name: orpp4-db
-          property: user
+        value: orpp_pgsql_db_user
       - key: DB_PASSWORD
-        fromDatabase:
-          name: orpp4-db
-          property: password
-
-databases:
-  - name: orpp4-db
-    databaseName: orpp4
-    user: orppuser
-    plan: free
+        value: aTGo0A0Stf3Dtns4dNKyIwUBnVPYc1wr
