@@ -1,51 +1,37 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
-        // Make columns nullable using raw SQL (doesn't require Doctrine DBAL)
-        DB::statement('ALTER TABLE users MODIFY title VARCHAR(255) NULL');
-        DB::statement('ALTER TABLE users MODIFY id_passport VARCHAR(255) NULL');
-        DB::statement('ALTER TABLE users MODIFY kra_pin VARCHAR(255) NULL');
-        DB::statement('ALTER TABLE users MODIFY county VARCHAR(255) NULL');
-        DB::statement('ALTER TABLE users MODIFY sub_county VARCHAR(255) NULL');
-        DB::statement('ALTER TABLE users MODIFY ethnicity VARCHAR(255) NULL');
-        DB::statement('ALTER TABLE users MODIFY nationality VARCHAR(255) NULL');
-        DB::statement('ALTER TABLE users MODIFY gender VARCHAR(255) NULL');
-        DB::statement('ALTER TABLE users MODIFY dob DATE NULL');
-        DB::statement('ALTER TABLE users MODIFY disability_status VARCHAR(255) NULL');
-        DB::statement('ALTER TABLE users MODIFY disability_certificate_number VARCHAR(255) NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN title DROP NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN id_passport DROP NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN kra_pin DROP NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN county DROP NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN sub_county DROP NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN ethnicity DROP NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN nationality DROP NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN gender DROP NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN dob DROP NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN disability_status DROP NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN disability_certificate_number DROP NOT NULL');
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
-        // Make columns NOT NULL again
-        DB::statement('ALTER TABLE users MODIFY title VARCHAR(255) NOT NULL');
-        DB::statement('ALTER TABLE users MODIFY id_passport VARCHAR(255) NOT NULL');
-        DB::statement('ALTER TABLE users MODIFY kra_pin VARCHAR(255) NOT NULL');
-        DB::statement('ALTER TABLE users MODIFY county VARCHAR(255) NOT NULL');
-        DB::statement('ALTER TABLE users MODIFY sub_county VARCHAR(255) NOT NULL');
-        DB::statement('ALTER TABLE users MODIFY ethnicity VARCHAR(255) NOT NULL');
-        DB::statement('ALTER TABLE users MODIFY nationality VARCHAR(255) NOT NULL');
-        DB::statement('ALTER TABLE users MODIFY gender VARCHAR(255) NOT NULL');
-        DB::statement('ALTER TABLE users MODIFY dob DATE NOT NULL');
-        DB::statement('ALTER TABLE users MODIFY disability_status VARCHAR(255) NOT NULL');
-        DB::statement('ALTER TABLE users MODIFY disability_certificate_number VARCHAR(255) NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN title SET NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN id_passport SET NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN kra_pin SET NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN county SET NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN sub_county SET NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN ethnicity SET NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN nationality SET NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN gender SET NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN dob SET NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN disability_status SET NOT NULL');
+        DB::statement('ALTER TABLE users ALTER COLUMN disability_certificate_number SET NOT NULL');
     }
 };
