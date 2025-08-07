@@ -381,3 +381,11 @@ Route::post('/admin/applications/send-shortlist-emails', [ApplicationsController
 Route::get('/forgot-password', function () {
     return view('auth.custom-forgot-password-form');
 })->name('password.request');
+
+
+Route::get('/test-reset', function () {
+    return view('auth.custom-reset-password-form', [
+        'token' => 'test-token',
+        'email' => 'collinskiprotich2028@gmail.com', 
+    ]);
+});

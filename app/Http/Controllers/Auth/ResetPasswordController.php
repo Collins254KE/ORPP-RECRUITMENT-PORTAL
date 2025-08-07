@@ -32,11 +32,12 @@ class ResetPasswordController extends Controller
     /**
      * Show custom reset password form.
      */
-    public function showResetForm(Request $request, $token = null)
-    {
-        return view('auth.custom-reset-password-form')->with([
-            'token' => $token,
-            'email' => $request->email,
-        ]);
-    }
+   public function showResetForm(Request $request, $token = null)
+{
+    return view('auth.reset-password')->with([
+        'token' => $token,
+        'email' => $request->email,
+    ]);
+}
+
 }
